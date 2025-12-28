@@ -40,14 +40,43 @@ export async function POST(request: Request) {
       { status: 201 }
     )
   } catch (error) {
+    console.error('Registration error:', error)
+    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid input', details: error.errors },
         { status: 400 }
       )
     }
+    
+    // Database connection errors
+    if (error instanceof Error) {
+      if (error.message.includes('P1001') || error.message.includes('connect')) {
+        return NextResponse.json(
+          { error: 'Database connection error. Please check your DATABASE_URL.' },
+          { status: 500 }
+        )
+      }
+      
+      // Table doesn't exist error
+      if (error.message.includes('does not exist') || error.message.includes('P2021')) {
+        return NextResponse.json(
+          { error: 'Database tables not found. Please run migrations: npx prisma migrate deploy' },
+          { status: 500 }
+        )
+      }
+      
+      // Unique constraint violation (user already exists)
+      if (error.message.includes('Unique constraint') || error.message.includes('P2002')) {
+        return NextResponse.json(
+          { error: 'User with this email already exists' },
+          { status: 400 }
+        )
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
