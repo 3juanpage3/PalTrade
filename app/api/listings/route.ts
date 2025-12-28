@@ -94,8 +94,31 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+    
+    // Log the actual error for debugging
+    console.error('Error creating listing:', error)
+    
+    // Provide more specific error messages
+    if (error instanceof Error) {
+      // Database connection errors
+      if (error.message.includes('DATABASE_URL') || error.message.includes('database')) {
+        return NextResponse.json(
+          { error: 'Database connection error. Please check your DATABASE_URL environment variable.' },
+          { status: 500 }
+        )
+      }
+      
+      // Prisma errors
+      if (error.message.includes('P1001') || error.message.includes('connect')) {
+        return NextResponse.json(
+          { error: 'Unable to connect to database. Please verify your database is running and accessible.' },
+          { status: 500 }
+        )
+      }
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' },
       { status: 500 }
     )
   }
