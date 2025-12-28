@@ -34,12 +34,6 @@ export default function ListingCard({ listing }: ListingCardProps) {
               alt={listing.name}
               fill
               className="object-cover"
-              onError={(e) => {
-                console.error('Image failed to load:', listing.image, 'for listing:', listing.name)
-              }}
-              onLoad={() => {
-                console.log('Image loaded successfully:', listing.image)
-              }}
               unoptimized
             />
           ) : (

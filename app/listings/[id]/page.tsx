@@ -109,12 +109,6 @@ export default function ListingDetailPage() {
                 alt={listing.name}
                 fill
                 className="object-cover"
-                onError={(e) => {
-                  console.error('Image failed to load:', listing.image)
-                }}
-                onLoad={() => {
-                  console.log('Image loaded successfully:', listing.image)
-                }}
                 unoptimized
               />
             ) : (
