@@ -108,7 +108,7 @@ export default function ProfilePage() {
         ) : (
           <div className="text-center py-12 bg-white rounded-lg shadow-md">
             <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg mb-4">You haven't created any listings yet.</p>
+            <p className="text-gray-600 text-lg mb-4">You haven&apos;t created any listings yet.</p>
             <button
               onClick={() => router.push('/create')}
               className="px-6 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium"

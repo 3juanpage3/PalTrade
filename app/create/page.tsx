@@ -316,7 +316,7 @@ export default function CreateListingPage() {
               </div>
             </div>
             <p className="mt-3 text-xs text-gray-500">
-              Leave fields empty if you don't want to specify that stat
+              Leave fields empty if you don&apos;t want to specify that stat
             </p>
           </div>
         )}
