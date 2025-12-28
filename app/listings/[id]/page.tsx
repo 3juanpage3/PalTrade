@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 import { format } from 'date-fns'
+import Image from 'next/image'
 import { Coins, Package, User, Trash2, Edit, TrendingUp, Heart, Sword, Shield, Zap, Gauge } from 'lucide-react'
 
 interface Listing {
@@ -103,16 +104,18 @@ export default function ListingDetailPage() {
         <div className="md:flex">
           <div className="md:w-1/2 relative h-64 md:h-auto bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
             {listing.image ? (
-              <img
+              <Image
                 src={listing.image}
                 alt={listing.name}
-                className="absolute inset-0 w-full h-full object-cover"
+                fill
+                className="object-cover"
                 onError={(e) => {
                   console.error('Image failed to load:', listing.image)
                 }}
                 onLoad={() => {
                   console.log('Image loaded successfully:', listing.image)
                 }}
+                unoptimized
               />
             ) : (
               <div className="flex items-center justify-center h-full">

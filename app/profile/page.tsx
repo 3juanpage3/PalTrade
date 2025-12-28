@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 import ListingCard from '@/components/ListingCard'
 import { User, Package } from 'lucide-react'
 
@@ -62,12 +63,14 @@ export default function ProfilePage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="bg-white rounded-lg shadow-md p-8 mb-8">
         <div className="flex items-center space-x-4">
-          <div className="h-20 w-20 rounded-full bg-primary-100 flex items-center justify-center">
+          <div className="h-20 w-20 rounded-full bg-primary-100 flex items-center justify-center relative overflow-hidden">
             {session.user?.image ? (
-              <img
+              <Image
                 src={session.user.image}
                 alt={session.user.name || 'User'}
-                className="h-20 w-20 rounded-full"
+                fill
+                className="object-cover rounded-full"
+                unoptimized
               />
             ) : (
               <User className="h-10 w-10 text-primary-600" />

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { format } from 'date-fns'
 import { Coins, Package } from 'lucide-react'
 
@@ -28,20 +29,19 @@ export default function ListingCard({ listing }: ListingCardProps) {
       <div className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow duration-300 overflow-hidden border border-gray-200">
         <div className="relative h-48 bg-gradient-to-br from-primary-100 to-primary-200 overflow-hidden">
           {listing.image ? (
-            <>
-              {/* Use regular img for external URLs to avoid Next.js Image issues */}
-              <img
-                src={listing.image}
-                alt={listing.name}
-                className="absolute inset-0 w-full h-full object-cover"
-                onError={(e) => {
-                  console.error('Image failed to load:', listing.image, 'for listing:', listing.name)
-                }}
-                onLoad={() => {
-                  console.log('Image loaded successfully:', listing.image)
-                }}
-              />
-            </>
+            <Image
+              src={listing.image}
+              alt={listing.name}
+              fill
+              className="object-cover"
+              onError={(e) => {
+                console.error('Image failed to load:', listing.image, 'for listing:', listing.name)
+              }}
+              onLoad={() => {
+                console.log('Image loaded successfully:', listing.image)
+              }}
+              unoptimized
+            />
           ) : (
             <div className="flex items-center justify-center h-full">
               <Package className="h-16 w-16 text-primary-400" />

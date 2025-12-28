@@ -8,6 +8,22 @@ const nextConfig = {
         hostname: 'palworld.gg',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.discord.com',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.discordapp.com',
+      },
     ],
   },
 }
