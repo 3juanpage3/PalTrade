@@ -1,7 +1,5 @@
 {
   "framework": "nextjs",
   "regions": ["iad1"],
-  "buildCommand": "prisma generate && next build",
-  "postBuildCommand": "npx prisma migrate deploy"
+  "buildCommand": "bash build.sh"
 }
-
