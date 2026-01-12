@@ -1,5 +1,4 @@
 {
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "buildCommand": "bash build.sh"
+  "regions": ["iad1"]
 }
