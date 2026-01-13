@@ -9,6 +9,7 @@
     "migrate": "prisma migrate deploy",
     "start": "next start",
     "lint": "next lint",
+    "postinstall": "prisma generate",
     "scrape-pals": "tsx scripts/scrape-pal-images-simple.ts"
   },
   "dependencies": {
