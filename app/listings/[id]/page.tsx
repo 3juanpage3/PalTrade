@@ -180,25 +180,6 @@ export default function ListingDetailPage() {
     }
   }
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this listing?')) return
-
-    setDeleting(true)
-    try {
-      const response = await fetch(`/api/listings/${params.id}`, {
-        method: 'DELETE',
-      })
-
-      if (response.ok) {
-        router.push('/browse')
-      }
-    } catch (err) {
-      alert('Failed to delete listing')
-    } finally {
-      setDeleting(false)
-    }
-  }
-
   if (loading) {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
