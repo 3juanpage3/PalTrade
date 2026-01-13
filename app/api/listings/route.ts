@@ -14,6 +14,8 @@ const listingSchema = z.object({
   category: z.string().optional(),
   stats: z.string().optional(),
   tradeOptions: z.string().optional().nullable(),
+  shopX: z.number().int().optional().nullable(),
+  shopY: z.number().int().optional().nullable(),
 });
 
 export async function GET(request: Request) {

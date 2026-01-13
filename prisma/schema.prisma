@@ -76,6 +76,8 @@ model Listing {
   category    String?
   stats       String?  // JSON string for pal stats
   tradeOptions String? // JSON array of {type, value} pairs for bartering
+  shopX       Int?     // Shop location X coordinate
+  shopY       Int?     // Shop location Y coordinate
   isActive    Boolean  @default(true)
   offers      Offer[]
   createdAt   DateTime @default(now())

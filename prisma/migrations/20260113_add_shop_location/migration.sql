@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "Listing" ADD COLUMN "shopX" INTEGER,
+ADD COLUMN "shopY" INTEGER;

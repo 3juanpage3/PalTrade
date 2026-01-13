@@ -29,6 +29,8 @@ export default function CreateListingPage() {
     category: "",
     stats: "",
     image: "", // Image URL
+    shopX: "",
+    shopY: "",
   });
 
   const [palStats, setPalStats] = useState({
@@ -135,6 +137,8 @@ export default function CreateListingPage() {
         ...formData,
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
+        shopX: formData.shopX ? parseInt(formData.shopX) : null,
+        shopY: formData.shopY ? parseInt(formData.shopY) : null,
         stats: statsString,
         tradeOptions:
           tradeOptions.length > 0 ? JSON.stringify(tradeOptions) : null,
@@ -282,6 +286,42 @@ export default function CreateListingPage() {
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Shop Location X (Optional)
+            </label>
+            <input
+              type="number"
+              step="1"
+              value={formData.shopX}
+              onChange={(e) =>
+                setFormData({ ...formData, shopX: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="e.g., 123"
+            />
+            <p className="text-xs text-gray-500 mt-1">East-West coordinate</p>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Shop Location Y (Optional)
+            </label>
+            <input
+              type="number"
+              step="1"
+              value={formData.shopY}
+              onChange={(e) =>
+                setFormData({ ...formData, shopY: e.target.value })
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              placeholder="e.g., 456"
+            />
+            <p className="text-xs text-gray-500 mt-1">North-South coordinate</p>
           </div>
         </div>
 

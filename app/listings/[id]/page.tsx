@@ -33,6 +33,8 @@ interface Listing {
   category?: string;
   stats?: string;
   tradeOptions?: string;
+  shopX?: number;
+  shopY?: number;
   createdAt: string;
   isActive: boolean;
   user: {
@@ -400,13 +402,19 @@ export default function ListingDetailPage() {
                 <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
                   <User className="h-6 w-6 text-primary-600" />
                 </div>
-                <div>
+                <div className="flex-1">
                   <p className="font-medium text-gray-900">
                     {listing.user.name || "Anonymous"}
                   </p>
                   <p className="text-sm text-gray-500">
                     Listed {format(new Date(listing.createdAt), "MMM d, yyyy")}
                   </p>
+                  {(listing.shopX !== undefined && listing.shopX !== null) ||
+                  (listing.shopY !== undefined && listing.shopY !== null) ? (
+                    <p className="text-sm text-primary-600 mt-1">
+                      📍 Shop: X: {listing.shopX}, Y: {listing.shopY}
+                    </p>
+                  ) : null}
                 </div>
               </div>
 
