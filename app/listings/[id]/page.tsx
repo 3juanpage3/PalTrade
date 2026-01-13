@@ -421,14 +421,24 @@ export default function ListingDetailPage() {
                         const options = JSON.parse(listing.tradeOptions);
                         return options.map((opt: any, idx: number) => {
                           // Find the item by name to get image
-                          const itemKey = Object.keys(itemImageUrls).find(key => {
-                            // Try to find if any item name matches opt.type
-                            const words = opt.type.toLowerCase().split(/[\s_]+/);
-                            const keyWords = key.toLowerCase().split(/[\s_]+/);
-                            return words.every(w => keyWords.includes(w));
-                          });
-                          const imgUrl = itemKey ? itemImageUrls[itemKey as keyof typeof itemImageUrls] : null;
-                          
+                          const itemKey = Object.keys(itemImageUrls).find(
+                            (key) => {
+                              // Try to find if any item name matches opt.type
+                              const words = opt.type
+                                .toLowerCase()
+                                .split(/[\s_]+/);
+                              const keyWords = key
+                                .toLowerCase()
+                                .split(/[\s_]+/);
+                              return words.every((w: string) => keyWords.includes(w));
+                            }
+                          );
+                          const imgUrl = itemKey
+                            ? itemImageUrls[
+                                itemKey as keyof typeof itemImageUrls
+                              ]
+                            : null;
+
                           return (
                             <div
                               key={idx}

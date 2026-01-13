@@ -400,7 +400,7 @@ export default function CreateListingPage() {
 
           <div className="space-y-3">
             {tradeOptions.map((option, idx) => {
-              const item = palworldItems.find(i => i.name === option.type);
+              const item = palworldItems.find((i) => i.name === option.type);
               const itemImg = item ? itemImageUrls[item.id] : null;
               return (
                 <div
