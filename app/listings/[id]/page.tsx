@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { format } from "date-fns";
 import Image from "next/image";
+import { itemImageUrls } from "@/data/items-images";
 import {
   Coins,
   Package,
@@ -418,17 +419,41 @@ export default function ListingDetailPage() {
                     {(() => {
                       try {
                         const options = JSON.parse(listing.tradeOptions);
-                        return options.map((opt: any, idx: number) => (
-                          <div
-                            key={idx}
-                            className="flex items-center space-x-2 text-amber-900"
-                          >
-                            <div className="w-2 h-2 bg-amber-600 rounded-full"></div>
-                            <span className="font-medium">
-                              {opt.value} {opt.type}
-                            </span>
-                          </div>
-                        ));
+                        return options.map((opt: any, idx: number) => {
+                          // Find the item by name to get image
+                          const itemKey = Object.keys(itemImageUrls).find(key => {
+                            // Try to find if any item name matches opt.type
+                            const words = opt.type.toLowerCase().split(/[\s_]+/);
+                            const keyWords = key.toLowerCase().split(/[\s_]+/);
+                            return words.every(w => keyWords.includes(w));
+                          });
+                          const imgUrl = itemKey ? itemImageUrls[itemKey as keyof typeof itemImageUrls] : null;
+                          
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center space-x-3 text-amber-900"
+                            >
+                              {imgUrl && (
+                                <div className="relative h-6 w-6 flex-shrink-0">
+                                  <Image
+                                    src={imgUrl}
+                                    alt={opt.type}
+                                    fill
+                                    className="object-contain"
+                                    unoptimized
+                                  />
+                                </div>
+                              )}
+                              {!imgUrl && (
+                                <div className="w-2 h-2 bg-amber-600 rounded-full"></div>
+                              )}
+                              <span className="font-medium">
+                                {opt.value} {opt.type}
+                              </span>
+                            </div>
+                          );
+                        });
                       } catch {
                         return null;
                       }

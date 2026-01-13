@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import {
   palworldItems,
   palworldPals,
@@ -10,6 +11,7 @@ import {
   palTypes,
   getPalImageUrl,
 } from "@/data/palworld-data";
+import { itemImageUrls } from "@/data/items-images";
 import { Plus, X } from "lucide-react";
 
 export default function CreateListingPage() {
@@ -392,30 +394,45 @@ export default function CreateListingPage() {
             ✨ Alternative Trade Options (Optional)
           </label>
           <p className="text-sm text-gray-600 mb-4">
-            Let buyers know what items you&apos;ll accept in trade. Search from all
-            game items!
+            Let buyers know what items you&apos;ll accept in trade. Search from
+            all game items!
           </p>
 
           <div className="space-y-3">
-            {tradeOptions.map((option, idx) => (
-              <div
-                key={idx}
-                className="flex items-center space-x-2 bg-white p-3 rounded-lg border border-blue-200"
-              >
-                <span className="flex-1 font-medium text-gray-900">
-                  {option.value} {option.type}
-                </span>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setTradeOptions(tradeOptions.filter((_, i) => i !== idx))
-                  }
-                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+            {tradeOptions.map((option, idx) => {
+              const item = palworldItems.find(i => i.name === option.type);
+              const itemImg = item ? itemImageUrls[item.id] : null;
+              return (
+                <div
+                  key={idx}
+                  className="flex items-center space-x-3 bg-white p-3 rounded-lg border border-blue-200"
                 >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            ))}
+                  {itemImg && (
+                    <div className="relative h-8 w-8 flex-shrink-0">
+                      <Image
+                        src={itemImg}
+                        alt={option.type}
+                        fill
+                        className="object-contain"
+                        unoptimized
+                      />
+                    </div>
+                  )}
+                  <span className="flex-1 font-medium text-gray-900">
+                    {option.value} {option.type}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTradeOptions(tradeOptions.filter((_, i) => i !== idx))
+                    }
+                    className="p-1 text-red-600 hover:bg-red-50 rounded"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              );
+            })}
           </div>
 
           <div className="mt-4 space-y-3">
@@ -433,27 +450,43 @@ export default function CreateListingPage() {
               />
 
               {showTradeDropdown && (
-                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-64 overflow-y-auto">
                   {filteredTradeItems.length > 0 ? (
-                    filteredTradeItems.map((item) => (
-                      <button
-                        key={item.id}
-                        type="button"
-                        onClick={() => {
-                          setNewTradeItemId(item.id);
-                          setTradeSearchQuery(item.name);
-                          setShowTradeDropdown(false);
-                        }}
-                        className="w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors"
-                      >
-                        <div className="font-medium text-gray-900">
-                          {item.name}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {item.category}
-                        </div>
-                      </button>
-                    ))
+                    filteredTradeItems.map((item) => {
+                      const imgUrl = itemImageUrls[item.id];
+                      return (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => {
+                            setNewTradeItemId(item.id);
+                            setTradeSearchQuery(item.name);
+                            setShowTradeDropdown(false);
+                          }}
+                          className="w-full text-left px-3 py-3 hover:bg-blue-50 transition-colors flex items-center space-x-3"
+                        >
+                          {imgUrl && (
+                            <div className="relative h-8 w-8 flex-shrink-0">
+                              <Image
+                                src={imgUrl}
+                                alt={item.name}
+                                fill
+                                className="object-contain"
+                                unoptimized
+                              />
+                            </div>
+                          )}
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {item.name}
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {item.category}
+                            </div>
+                          </div>
+                        </button>
+                      );
+                    })
                   ) : (
                     <div className="px-3 py-2 text-gray-500 text-sm">
                       No items found
