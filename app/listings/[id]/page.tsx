@@ -430,7 +430,9 @@ export default function ListingDetailPage() {
                               const keyWords = key
                                 .toLowerCase()
                                 .split(/[\s_]+/);
-                              return words.every((w: string) => keyWords.includes(w));
+                              return words.every((w: string) =>
+                                keyWords.includes(w)
+                              );
                             }
                           );
                           const imgUrl = itemKey
