@@ -1,131 +1,162 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useSession } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { palworldItems, palworldPals, itemCategories, palTypes, getPalImageUrl } from '@/data/palworld-data'
-import { Plus, X } from 'lucide-react'
+import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import {
+  palworldItems,
+  palworldPals,
+  itemCategories,
+  palTypes,
+  getPalImageUrl,
+} from "@/data/palworld-data";
+import { Plus, X } from "lucide-react";
 
 export default function CreateListingPage() {
-  const { data: session, status } = useSession()
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    type: 'item',
-    selectedId: '', // Store the ID of selected item/pal
-    name: '', // Store the display name
-    description: '',
-    price: '',
-    quantity: '1',
-    category: '',
-    stats: '',
-    image: '', // Image URL
-  })
-  
-  const [palStats, setPalStats] = useState({
-    level: '',
-    hp: '',
-    attack: '',
-    defense: '',
-    workSpeed: '',
-    moveSpeed: '',
-  })
+    type: "item",
+    selectedId: "", // Store the ID of selected item/pal
+    name: "", // Store the display name
+    description: "",
+    price: "",
+    quantity: "1",
+    category: "",
+    stats: "",
+    image: "", // Image URL
+  });
 
-  const [tradeOptions, setTradeOptions] = useState<Array<{type: string, value: string}>>([])
-  const [newTradeType, setNewTradeType] = useState('coins')
-  const [newTradeValue, setNewTradeValue] = useState('')
+  const [palStats, setPalStats] = useState({
+    level: "",
+    hp: "",
+    attack: "",
+    defense: "",
+    workSpeed: "",
+    moveSpeed: "",
+  });
+
+  const [tradeOptions, setTradeOptions] = useState<
+    Array<{ type: string; value: string }>
+  >([]);
+  const [newTradeType, setNewTradeType] = useState("coins");
+  const [newTradeValue, setNewTradeValue] = useState("");
 
   useEffect(() => {
-    if (status === 'unauthenticated') {
-      router.push('/login')
+    if (status === "unauthenticated") {
+      router.push("/login");
     }
-  }, [status, router])
+  }, [status, router]);
 
-  if (status === 'loading') {
+  if (status === "loading") {
     return (
       <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
         <div className="text-gray-600">Loading...</div>
       </div>
-    )
+    );
   }
 
   if (!session) {
-    return null
+    return null;
   }
 
   const handleTypeChange = (type: string) => {
-    setFormData({ ...formData, type, selectedId: '', name: '', category: '' })
-    if (type === 'item') {
-      setPalStats({ level: '', hp: '', attack: '', defense: '', workSpeed: '', moveSpeed: '' })
+    setFormData({ ...formData, type, selectedId: "", name: "", category: "" });
+    if (type === "item") {
+      setPalStats({
+        level: "",
+        hp: "",
+        attack: "",
+        defense: "",
+        workSpeed: "",
+        moveSpeed: "",
+      });
     }
-  }
+  };
 
   const handleNameChange = (selectedId: string) => {
-    if (formData.type === 'item') {
-      const item = palworldItems.find((i) => i.id === selectedId)
+    if (formData.type === "item") {
+      const item = palworldItems.find((i) => i.id === selectedId);
       if (item) {
-        setFormData((prev) => ({ ...prev, selectedId, name: item.name, category: item.category, image: '' }))
+        setFormData((prev) => ({
+          ...prev,
+          selectedId,
+          name: item.name,
+          category: item.category,
+          image: "",
+        }));
       }
     } else {
-      const pal = palworldPals.find((p) => p.id === selectedId)
+      const pal = palworldPals.find((p) => p.id === selectedId);
       if (pal) {
-        const imageUrl = getPalImageUrl(selectedId)
-        console.log('Pal selected:', pal.name, 'Image URL:', imageUrl)
-        setFormData((prev) => ({ ...prev, selectedId, name: pal.name, category: pal.type, image: imageUrl || '' }))
+        const imageUrl = getPalImageUrl(selectedId);
+        console.log("Pal selected:", pal.name, "Image URL:", imageUrl);
+        setFormData((prev) => ({
+          ...prev,
+          selectedId,
+          name: pal.name,
+          category: pal.type,
+          image: imageUrl || "",
+        }));
       }
     }
-  }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+    e.preventDefault();
+    setError("");
+    setLoading(true);
 
     try {
       // Build stats object from individual fields (only include non-empty values)
-      const statsObj: any = {}
-      if (palStats.level) statsObj.level = parseInt(palStats.level)
-      if (palStats.hp) statsObj.hp = parseInt(palStats.hp)
-      if (palStats.attack) statsObj.attack = parseInt(palStats.attack)
-      if (palStats.defense) statsObj.defense = parseInt(palStats.defense)
-      if (palStats.workSpeed) statsObj.workSpeed = parseInt(palStats.workSpeed)
-      if (palStats.moveSpeed) statsObj.moveSpeed = parseInt(palStats.moveSpeed)
-      
-      const statsString = Object.keys(statsObj).length > 0 ? JSON.stringify(statsObj) : ''
+      const statsObj: any = {};
+      if (palStats.level) statsObj.level = parseInt(palStats.level);
+      if (palStats.hp) statsObj.hp = parseInt(palStats.hp);
+      if (palStats.attack) statsObj.attack = parseInt(palStats.attack);
+      if (palStats.defense) statsObj.defense = parseInt(palStats.defense);
+      if (palStats.workSpeed) statsObj.workSpeed = parseInt(palStats.workSpeed);
+      if (palStats.moveSpeed) statsObj.moveSpeed = parseInt(palStats.moveSpeed);
+
+      const statsString =
+        Object.keys(statsObj).length > 0 ? JSON.stringify(statsObj) : "";
 
       const payload = {
         ...formData,
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         stats: statsString,
-        tradeOptions: tradeOptions.length > 0 ? JSON.stringify(tradeOptions) : null,
-      }
-      console.log('Submitting listing with image:', payload.image)
-      
-      const response = await fetch('/api/listings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      })
+        tradeOptions:
+          tradeOptions.length > 0 ? JSON.stringify(tradeOptions) : null,
+      };
+      console.log("Submitting listing with image:", payload.image);
 
-      const data = await response.json()
+      const response = await fetch("/api/listings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || 'Failed to create listing')
+        setError(data.error || "Failed to create listing");
       } else {
-        router.push(`/listings/${data.id}`)
+        router.push(`/listings/${data.id}`);
       }
     } catch (err) {
-      setError('An error occurred. Please try again.')
+      setError("An error occurred. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <h1 className="text-4xl font-bold text-gray-900 mb-8">Create New Listing</h1>
+      <h1 className="text-4xl font-bold text-gray-900 mb-8">
+        Create New Listing
+      </h1>
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
@@ -133,7 +164,10 @@ export default function CreateListingPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-md p-8 space-y-6">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-white rounded-lg shadow-md p-8 space-y-6"
+      >
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Listing Type
@@ -141,22 +175,22 @@ export default function CreateListingPage() {
           <div className="flex space-x-4">
             <button
               type="button"
-              onClick={() => handleTypeChange('item')}
+              onClick={() => handleTypeChange("item")}
               className={`flex-1 py-3 px-4 rounded-lg border-2 transition-colors ${
-                formData.type === 'item'
-                  ? 'border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                formData.type === "item"
+                  ? "border-primary-600 bg-primary-50 text-primary-700"
+                  : "border-gray-300 text-gray-700 hover:border-gray-400"
               }`}
             >
               Item
             </button>
             <button
               type="button"
-              onClick={() => handleTypeChange('pal')}
+              onClick={() => handleTypeChange("pal")}
               className={`flex-1 py-3 px-4 rounded-lg border-2 transition-colors ${
-                formData.type === 'pal'
-                  ? 'border-primary-600 bg-primary-50 text-primary-700'
-                  : 'border-gray-300 text-gray-700 hover:border-gray-400'
+                formData.type === "pal"
+                  ? "border-primary-600 bg-primary-50 text-primary-700"
+                  : "border-gray-300 text-gray-700 hover:border-gray-400"
               }`}
             >
               Pal
@@ -166,7 +200,7 @@ export default function CreateListingPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {formData.type === 'item' ? 'Item' : 'Pal'}
+            {formData.type === "item" ? "Item" : "Pal"}
           </label>
           <select
             value={formData.selectedId}
@@ -174,8 +208,10 @@ export default function CreateListingPage() {
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           >
-            <option value="">Select {formData.type === 'item' ? 'Item' : 'Pal'}...</option>
-            {formData.type === 'item'
+            <option value="">
+              Select {formData.type === "item" ? "Item" : "Pal"}...
+            </option>
+            {formData.type === "item"
               ? palworldItems.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.name}
@@ -195,7 +231,9 @@ export default function CreateListingPage() {
           </label>
           <textarea
             value={formData.description}
-            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            onChange={(e) =>
+              setFormData({ ...formData, description: e.target.value })
+            }
             rows={4}
             className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             placeholder="Add any additional details about your listing..."
@@ -212,7 +250,9 @@ export default function CreateListingPage() {
               step="0.01"
               min="0"
               value={formData.price}
-              onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, price: e.target.value })
+              }
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               placeholder="0.00"
@@ -227,14 +267,16 @@ export default function CreateListingPage() {
               type="number"
               min="1"
               value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, quantity: e.target.value })
+              }
               required
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
         </div>
 
-        {formData.type === 'pal' && (
+        {formData.type === "pal" && (
           <div className="bg-gray-50 rounded-lg p-6 border border-gray-200">
             <label className="block text-sm font-medium text-gray-700 mb-4">
               Pal Stats (Optional)
@@ -249,7 +291,9 @@ export default function CreateListingPage() {
                   min="1"
                   max="50"
                   value={palStats.level}
-                  onChange={(e) => setPalStats({ ...palStats, level: e.target.value })}
+                  onChange={(e) =>
+                    setPalStats({ ...palStats, level: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
                   placeholder="1-50"
                 />
@@ -262,7 +306,9 @@ export default function CreateListingPage() {
                   type="number"
                   min="0"
                   value={palStats.hp}
-                  onChange={(e) => setPalStats({ ...palStats, hp: e.target.value })}
+                  onChange={(e) =>
+                    setPalStats({ ...palStats, hp: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
                   placeholder="Health Points"
                 />
@@ -275,7 +321,9 @@ export default function CreateListingPage() {
                   type="number"
                   min="0"
                   value={palStats.attack}
-                  onChange={(e) => setPalStats({ ...palStats, attack: e.target.value })}
+                  onChange={(e) =>
+                    setPalStats({ ...palStats, attack: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
                   placeholder="Attack Power"
                 />
@@ -288,7 +336,9 @@ export default function CreateListingPage() {
                   type="number"
                   min="0"
                   value={palStats.defense}
-                  onChange={(e) => setPalStats({ ...palStats, defense: e.target.value })}
+                  onChange={(e) =>
+                    setPalStats({ ...palStats, defense: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
                   placeholder="Defense Power"
                 />
@@ -301,7 +351,9 @@ export default function CreateListingPage() {
                   type="number"
                   min="0"
                   value={palStats.workSpeed}
-                  onChange={(e) => setPalStats({ ...palStats, workSpeed: e.target.value })}
+                  onChange={(e) =>
+                    setPalStats({ ...palStats, workSpeed: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
                   placeholder="Work Speed"
                 />
@@ -314,7 +366,9 @@ export default function CreateListingPage() {
                   type="number"
                   min="0"
                   value={palStats.moveSpeed}
-                  onChange={(e) => setPalStats({ ...palStats, moveSpeed: e.target.value })}
+                  onChange={(e) =>
+                    setPalStats({ ...palStats, moveSpeed: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent bg-white"
                   placeholder="Movement Speed"
                 />
@@ -331,16 +385,24 @@ export default function CreateListingPage() {
             ✨ Alternative Trade Options (Optional)
           </label>
           <p className="text-sm text-gray-600 mb-4">
-            Let buyers know other ways to trade for this item. For example: &quot;50 Coal&quot;, &quot;100 Gems&quot;, &quot;Iron Ore&quot;
+            Let buyers know other ways to trade for this item. For example:
+            &quot;50 Coal&quot;, &quot;100 Gems&quot;, &quot;Iron Ore&quot;
           </p>
-          
+
           <div className="space-y-3">
             {tradeOptions.map((option, idx) => (
-              <div key={idx} className="flex items-center space-x-2 bg-white p-3 rounded-lg border border-blue-200">
-                <span className="flex-1 font-medium text-gray-900">{option.value} {option.type}</span>
+              <div
+                key={idx}
+                className="flex items-center space-x-2 bg-white p-3 rounded-lg border border-blue-200"
+              >
+                <span className="flex-1 font-medium text-gray-900">
+                  {option.value} {option.type}
+                </span>
                 <button
                   type="button"
-                  onClick={() => setTradeOptions(tradeOptions.filter((_, i) => i !== idx))}
+                  onClick={() =>
+                    setTradeOptions(tradeOptions.filter((_, i) => i !== idx))
+                  }
                   className="p-1 text-red-600 hover:bg-red-50 rounded"
                 >
                   <X className="h-5 w-5" />
@@ -374,9 +436,12 @@ export default function CreateListingPage() {
               type="button"
               onClick={() => {
                 if (newTradeValue.trim()) {
-                  setTradeOptions([...tradeOptions, {type: newTradeType, value: newTradeValue}])
-                  setNewTradeValue('')
-                  setNewTradeType('coins')
+                  setTradeOptions([
+                    ...tradeOptions,
+                    { type: newTradeType, value: newTradeValue },
+                  ]);
+                  setNewTradeValue("");
+                  setNewTradeType("coins");
                 }
               }}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
@@ -393,7 +458,7 @@ export default function CreateListingPage() {
             className="flex-1 flex items-center justify-center space-x-2 py-3 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Plus className="h-5 w-5" />
-            <span>{loading ? 'Creating...' : 'Create Listing'}</span>
+            <span>{loading ? "Creating..." : "Create Listing"}</span>
           </button>
           <button
             type="button"
@@ -405,6 +470,5 @@ export default function CreateListingPage() {
         </div>
       </form>
     </div>
-  )
+  );
 }
-

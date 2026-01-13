@@ -419,9 +419,14 @@ export default function ListingDetailPage() {
                       try {
                         const options = JSON.parse(listing.tradeOptions);
                         return options.map((opt: any, idx: number) => (
-                          <div key={idx} className="flex items-center space-x-2 text-amber-900">
+                          <div
+                            key={idx}
+                            className="flex items-center space-x-2 text-amber-900"
+                          >
                             <div className="w-2 h-2 bg-amber-600 rounded-full"></div>
-                            <span className="font-medium">{opt.value} {opt.type}</span>
+                            <span className="font-medium">
+                              {opt.value} {opt.type}
+                            </span>
                           </div>
                         ));
                       } catch {
