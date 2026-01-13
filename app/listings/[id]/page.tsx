@@ -31,6 +31,7 @@ interface Listing {
   image?: string;
   category?: string;
   stats?: string;
+  tradeOptions?: string;
   createdAt: string;
   isActive: boolean;
   user: {
@@ -407,6 +408,29 @@ export default function ListingDetailPage() {
                   </p>
                 </div>
               </div>
+
+              {listing.tradeOptions && (
+                <div className="mt-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <h3 className="font-semibold text-amber-900 mb-3">
+                    ✨ Also accepting trades for:
+                  </h3>
+                  <div className="space-y-2">
+                    {(() => {
+                      try {
+                        const options = JSON.parse(listing.tradeOptions);
+                        return options.map((opt: any, idx: number) => (
+                          <div key={idx} className="flex items-center space-x-2 text-amber-900">
+                            <div className="w-2 h-2 bg-amber-600 rounded-full"></div>
+                            <span className="font-medium">{opt.value} {opt.type}</span>
+                          </div>
+                        ));
+                      } catch {
+                        return null;
+                      }
+                    })()}
+                  </div>
+                </div>
+              )}
 
               {!isOwner && listing.isActive && (
                 <div className="mt-8">

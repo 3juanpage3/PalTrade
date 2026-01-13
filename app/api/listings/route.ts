@@ -13,6 +13,7 @@ const listingSchema = z.object({
   image: z.string().url().optional().or(z.literal('')),
   category: z.string().optional(),
   stats: z.string().optional(),
+  tradeOptions: z.string().optional().nullable(),
 })
 
 export async function GET(request: Request) {

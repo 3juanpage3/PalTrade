@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS "Listing" (
   image TEXT,
   category TEXT,
   stats TEXT,
+  "tradeOptions" TEXT,
   "isActive" BOOLEAN DEFAULT true,
   "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
   "updatedAt" TIMESTAMP(3),

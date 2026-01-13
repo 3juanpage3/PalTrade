@@ -32,6 +32,10 @@ export default function CreateListingPage() {
     moveSpeed: '',
   })
 
+  const [tradeOptions, setTradeOptions] = useState<Array<{type: string, value: string}>>([])
+  const [newTradeType, setNewTradeType] = useState('coins')
+  const [newTradeValue, setNewTradeValue] = useState('')
+
   useEffect(() => {
     if (status === 'unauthenticated') {
       router.push('/login')
@@ -95,6 +99,7 @@ export default function CreateListingPage() {
         price: parseFloat(formData.price),
         quantity: parseInt(formData.quantity),
         stats: statsString,
+        tradeOptions: tradeOptions.length > 0 ? JSON.stringify(tradeOptions) : null,
       }
       console.log('Submitting listing with image:', payload.image)
       
@@ -320,6 +325,66 @@ export default function CreateListingPage() {
             </p>
           </div>
         )}
+
+        <div className="bg-blue-50 rounded-lg p-6 border border-blue-200">
+          <label className="block text-sm font-medium text-gray-700 mb-4">
+            ✨ Alternative Trade Options (Optional)
+          </label>
+          <p className="text-sm text-gray-600 mb-4">
+            Let buyers know other ways to trade for this item. For example: &quot;50 Coal&quot;, &quot;100 Gems&quot;, &quot;Iron Ore&quot;
+          </p>
+          
+          <div className="space-y-3">
+            {tradeOptions.map((option, idx) => (
+              <div key={idx} className="flex items-center space-x-2 bg-white p-3 rounded-lg border border-blue-200">
+                <span className="flex-1 font-medium text-gray-900">{option.value} {option.type}</span>
+                <button
+                  type="button"
+                  onClick={() => setTradeOptions(tradeOptions.filter((_, i) => i !== idx))}
+                  className="p-1 text-red-600 hover:bg-red-50 rounded"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex space-x-2">
+            <input
+              type="text"
+              value={newTradeValue}
+              onChange={(e) => setNewTradeValue(e.target.value)}
+              placeholder="e.g., 50, 100, 200"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <select
+              value={newTradeType}
+              onChange={(e) => setNewTradeType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            >
+              <option value="Coins">Coins</option>
+              <option value="Coal">Coal</option>
+              <option value="Gems">Gems</option>
+              <option value="Iron Ore">Iron Ore</option>
+              <option value="Stone">Stone</option>
+              <option value="Wood">Wood</option>
+              <option value="Other">Other</option>
+            </select>
+            <button
+              type="button"
+              onClick={() => {
+                if (newTradeValue.trim()) {
+                  setTradeOptions([...tradeOptions, {type: newTradeType, value: newTradeValue}])
+                  setNewTradeValue('')
+                  setNewTradeType('coins')
+                }
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              <Plus className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
 
         <div className="flex space-x-4 pt-4">
           <button

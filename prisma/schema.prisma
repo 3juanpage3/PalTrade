@@ -75,6 +75,7 @@ model Listing {
   image       String?
   category    String?
   stats       String?  // JSON string for pal stats
+  tradeOptions String? // JSON array of {type, value} pairs for bartering
   isActive    Boolean  @default(true)
   offers      Offer[]
   createdAt   DateTime @default(now())
