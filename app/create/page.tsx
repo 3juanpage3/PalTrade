@@ -41,8 +41,10 @@ export default function CreateListingPage() {
   const [tradeOptions, setTradeOptions] = useState<
     Array<{ type: string; value: string }>
   >([]);
-  const [newTradeType, setNewTradeType] = useState("coins");
-  const [newTradeValue, setNewTradeValue] = useState("");
+  const [newTradeItemId, setNewTradeItemId] = useState("");
+  const [newTradeQuantity, setNewTradeQuantity] = useState("");
+  const [tradeSearchQuery, setTradeSearchQuery] = useState("");
+  const [showTradeDropdown, setShowTradeDropdown] = useState(false);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -103,6 +105,11 @@ export default function CreateListingPage() {
       }
     }
   };
+
+  // Filter items for trade options search
+  const filteredTradeItems = palworldItems.filter((item) =>
+    item.name.toLowerCase().includes(tradeSearchQuery.toLowerCase())
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -385,8 +392,8 @@ export default function CreateListingPage() {
             ✨ Alternative Trade Options (Optional)
           </label>
           <p className="text-sm text-gray-600 mb-4">
-            Let buyers know other ways to trade for this item. For example:
-            &quot;50 Coal&quot;, &quot;100 Gems&quot;, &quot;Iron Ore&quot;
+            Let buyers know what items you'll accept in trade. Search from all
+            game items!
           </p>
 
           <div className="space-y-3">
@@ -411,43 +418,86 @@ export default function CreateListingPage() {
             ))}
           </div>
 
-          <div className="mt-4 flex space-x-2">
-            <input
-              type="text"
-              value={newTradeValue}
-              onChange={(e) => setNewTradeValue(e.target.value)}
-              placeholder="e.g., 50, 100, 200"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            />
-            <select
-              value={newTradeType}
-              onChange={(e) => setNewTradeType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
-            >
-              <option value="Coins">Coins</option>
-              <option value="Coal">Coal</option>
-              <option value="Gems">Gems</option>
-              <option value="Iron Ore">Iron Ore</option>
-              <option value="Stone">Stone</option>
-              <option value="Wood">Wood</option>
-              <option value="Other">Other</option>
-            </select>
-            <button
-              type="button"
-              onClick={() => {
-                if (newTradeValue.trim()) {
-                  setTradeOptions([
-                    ...tradeOptions,
-                    { type: newTradeType, value: newTradeValue },
-                  ]);
-                  setNewTradeValue("");
-                  setNewTradeType("coins");
-                }
-              }}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
+          <div className="mt-4 space-y-3">
+            <div className="relative">
+              <input
+                type="text"
+                value={tradeSearchQuery}
+                onChange={(e) => {
+                  setTradeSearchQuery(e.target.value);
+                  setShowTradeDropdown(true);
+                }}
+                onFocus={() => setShowTradeDropdown(true)}
+                placeholder="Search items (e.g., Coal, Wood, Stone)..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+
+              {showTradeDropdown && (
+                <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                  {filteredTradeItems.length > 0 ? (
+                    filteredTradeItems.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => {
+                          setNewTradeItemId(item.id);
+                          setTradeSearchQuery(item.name);
+                          setShowTradeDropdown(false);
+                        }}
+                        className="w-full text-left px-3 py-2 hover:bg-blue-50 transition-colors"
+                      >
+                        <div className="font-medium text-gray-900">
+                          {item.name}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {item.category}
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <div className="px-3 py-2 text-gray-500 text-sm">
+                      No items found
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="flex space-x-2">
+              <input
+                type="number"
+                min="1"
+                value={newTradeQuantity}
+                onChange={(e) => setNewTradeQuantity(e.target.value)}
+                placeholder="Quantity"
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  if (newTradeItemId && newTradeQuantity) {
+                    const selectedItem = palworldItems.find(
+                      (i) => i.id === newTradeItemId
+                    );
+                    if (selectedItem) {
+                      setTradeOptions([
+                        ...tradeOptions,
+                        {
+                          type: selectedItem.name,
+                          value: newTradeQuantity,
+                        },
+                      ]);
+                      setNewTradeItemId("");
+                      setNewTradeQuantity("");
+                      setTradeSearchQuery("");
+                      setShowTradeDropdown(false);
+                    }
+                  }
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
           </div>
         </div>
 
