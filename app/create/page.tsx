@@ -392,7 +392,7 @@ export default function CreateListingPage() {
             ✨ Alternative Trade Options (Optional)
           </label>
           <p className="text-sm text-gray-600 mb-4">
-            Let buyers know what items you'll accept in trade. Search from all
+            Let buyers know what items you&apos;ll accept in trade. Search from all
             game items!
           </p>
 
