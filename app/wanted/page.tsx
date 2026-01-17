@@ -303,8 +303,8 @@ export default function OrdersPage() {
                       {/* Price */}
                       <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2">
                         <span className="text-gray-600">Willing to Pay:</span>
-                        <span className="font-bold text-blue-600">
-                          ${order.willingToPay.toLocaleString()}
+                        <span className="font-bold text-yellow-600">
+                          {order.willingToPay.toLocaleString()} 🪙
                         </span>
                       </div>
 
@@ -626,7 +626,7 @@ function PostOrderModal({
           {/* Price */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Willing to Pay *
+              Willing to Pay (Gold Coins) 🪙 *
             </label>
             <input
               type="number"
@@ -771,7 +771,7 @@ function AcceptOrderModal({
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <h3 className="font-bold text-gray-900 mb-2">{order.name}</h3>
             <p className="text-sm text-gray-700">
-              Willing to pay: <span className="font-bold text-blue-600">${order.willingToPay.toLocaleString()}</span>
+              Willing to pay: <span className="font-bold text-yellow-600">{order.willingToPay.toLocaleString()} 🪙</span>
             </p>
             {order.description && (
               <p className="text-sm text-gray-700 mt-2">{order.description}</p>
