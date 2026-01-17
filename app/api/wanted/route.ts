@@ -81,12 +81,18 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
+    console.log("Session check:", session);
+    
     if (!session?.user?.id) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      console.error("No session or user ID found");
+      return NextResponse.json({ error: "Unauthorized - Please login first" }, { status: 401 });
     }
 
     const body = await request.json();
+    console.log("Request body:", body);
+    
     const data = wantedSchema.parse(body);
+    console.log("Validated data:", data);
 
     const wantedItem = await prisma.wantedItem.create({
       data: {
@@ -105,15 +111,18 @@ export async function POST(request: Request) {
       },
     });
 
+    console.log("Created wanted item:", wantedItem);
     return NextResponse.json(wantedItem, { status: 201 });
   } catch (error: any) {
+    console.error("Full error in POST:", error);
+    
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request data", details: error.errors },
         { status: 400 }
       );
     }
-    console.error("Failed to create wanted item:", error);
+    
     return NextResponse.json(
       { error: "Failed to create wanted item", details: error.message },
       { status: 500 }

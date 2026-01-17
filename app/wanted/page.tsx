@@ -121,7 +121,7 @@ export default function OrdersPage() {
               className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition"
             >
               <Plus size={20} />
-              Post a Want
+              Post an Order
             </button>
           </div>
         </div>
@@ -438,7 +438,7 @@ function PostWantedModal({
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 flex justify-between items-center">
-          <h2 className="text-xl font-bold">Post a Want</h2>
+          <h2 className="text-xl font-bold">Post an Order</h2>
           <button
             onClick={onClose}
             className="text-2xl leading-none hover:text-blue-200 transition"
@@ -656,7 +656,7 @@ function PostWantedModal({
               disabled={loading}
               className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition font-medium"
             >
-              {loading ? "Posting..." : "Post Want"}
+              {loading ? "Posting..." : "Post Order"}
             </button>
           </div>
         </form>
