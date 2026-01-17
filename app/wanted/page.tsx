@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Plus, Trash2, ChevronDown } from "lucide-react";
+import { Search, Plus, Trash2, ChevronDown, Bell } from "lucide-react";
 import { palworldItems, palworldPals } from "@/data/palworld-data";
 
 interface Order {
@@ -18,6 +18,14 @@ interface Order {
   userName: string;
 }
 
+interface OrderResponse {
+  id: string;
+  orderId: string;
+  respondentName: string;
+  message: string;
+  createdAt: string;
+}
+
 interface OrderFilters {
   search: string;
   type: "all" | "pal" | "item";
@@ -27,6 +35,7 @@ interface OrderFilters {
 }
 
 const STORAGE_KEY = "paltrade_orders";
+const RESPONSES_STORAGE_KEY = "paltrade_responses";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -38,6 +47,8 @@ export default function OrdersPage() {
     maxPrice: 1000000,
   });
   const [showPostModal, setShowPostModal] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showAcceptModal, setShowAcceptModal] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
   // Load orders from localStorage on mount
@@ -317,8 +328,14 @@ export default function OrdersPage() {
                       </div>
 
                       {/* CTA Button */}
-                      <button className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium text-sm">
-                        I Have This
+                      <button
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowAcceptModal(true);
+                        }}
+                        className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition font-medium text-sm"
+                      >
+                        Accept Order
                       </button>
                     </div>
                   </div>
@@ -337,6 +354,21 @@ export default function OrdersPage() {
             setOrders((prev) => [newOrder, ...prev]);
             const updated = [newOrder, ...orders];
             localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          }}
+        />
+      )}
+
+      {/* Accept Order Modal */}
+      {showAcceptModal && selectedOrder && (
+        <AcceptOrderModal
+          order={selectedOrder}
+          onClose={() => {
+            setShowAcceptModal(false);
+            setSelectedOrder(null);
+          }}
+          onSuccess={() => {
+            setShowAcceptModal(false);
+            setSelectedOrder(null);
           }}
         />
       )}
@@ -646,6 +678,162 @@ function PostOrderModal({
             </button>
           </div>
         </form>
+      </div>
+    </div>
+  );
+}
+function AcceptOrderModal({
+  order,
+  onClose,
+  onSuccess,
+}: {
+  order: Order;
+  onClose: () => void;
+  onSuccess: () => void;
+}) {
+  const [message, setMessage] = useState("");
+  const [respondentName, setRespondentName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!respondentName.trim()) {
+      setError("Please enter your name");
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // Create the response
+      const response: OrderResponse = {
+        id: Date.now().toString(),
+        orderId: order.id,
+        respondentName,
+        message,
+        createdAt: new Date().toISOString(),
+      };
+
+      // Get existing responses
+      const existing = localStorage.getItem(RESPONSES_STORAGE_KEY);
+      const responses: OrderResponse[] = existing ? JSON.parse(existing) : [];
+
+      // Add new response
+      responses.push(response);
+      localStorage.setItem(RESPONSES_STORAGE_KEY, JSON.stringify(responses));
+
+      // Create notification for the order creator
+      const notification = {
+        id: Date.now().toString(),
+        orderId: order.id,
+        type: "order_response",
+        title: `${respondentName} accepted your ${order.type} order for ${order.name}`,
+        message: message || `${respondentName} has what you're looking for!`,
+        read: false,
+        createdAt: new Date().toISOString(),
+        respondentName,
+      };
+
+      const existingNotifications = localStorage.getItem("paltrade_notifications");
+      const notifications = existingNotifications ? JSON.parse(existingNotifications) : [];
+      notifications.push(notification);
+      localStorage.setItem("paltrade_notifications", JSON.stringify(notifications));
+
+      // Show success and close
+      alert(
+        `✅ Success! Your response has been sent to ${order.userName}. They'll see a notification about it!`
+      );
+      onSuccess();
+    } catch (err) {
+      setError("Failed to send response");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto">
+        <div className="sticky top-0 bg-gradient-to-r from-green-600 to-green-700 text-white p-6 flex justify-between items-center">
+          <h2 className="text-xl font-bold">Accept Order</h2>
+          <button
+            onClick={onClose}
+            className="text-2xl leading-none hover:text-green-200 transition"
+          >
+            ×
+          </button>
+        </div>
+
+        <div className="p-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="font-bold text-gray-900 mb-2">{order.name}</h3>
+            <p className="text-sm text-gray-700">
+              Willing to pay: <span className="font-bold text-blue-600">${order.willingToPay.toLocaleString()}</span>
+            </p>
+            {order.description && (
+              <p className="text-sm text-gray-700 mt-2">{order.description}</p>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Your Name *
+              </label>
+              <input
+                type="text"
+                value={respondentName}
+                onChange={(e) => setRespondentName(e.target.value)}
+                placeholder="Enter your name"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Message (optional)
+              </label>
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="Tell them what you have and any other details..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                rows={4}
+              />
+            </div>
+
+            <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
+              <p>✅ A notification will be sent to <strong>{order.userName}</strong> once you submit.</p>
+            </div>
+
+            <div className="flex gap-3 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-400 transition font-medium"
+              >
+                {loading ? "Sending..." : "Accept & Notify"}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
