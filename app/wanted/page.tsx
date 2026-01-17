@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Search, Plus, AlertCircle, Loader } from "lucide-react";
+import Image from "next/image";
 
 interface WantedItem {
   id: string;
@@ -39,11 +40,7 @@ export default function WantedPage() {
   const [loading, setLoading] = useState(true);
   const [showPostModal, setShowPostModal] = useState(false);
 
-  useEffect(() => {
-    fetchWantedItems();
-  }, []);
-
-  const fetchWantedItems = async () => {
+  const fetchWantedItems = useCallback(async () => {
     try {
       setLoading(true);
       const params = new URLSearchParams({
@@ -63,7 +60,11 @@ export default function WantedPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchWantedItems();
+  }, [fetchWantedItems]);
 
   const handleSearch = (value: string) => {
     setFilters((prev) => ({ ...prev, search: value }));
@@ -113,7 +114,7 @@ export default function WantedPage() {
               </h1>
               <p className="text-gray-600 mt-2">
                 Help traders find what they need - post notices for items and
-                pals you're looking for
+                pals you&apos;re looking for
               </p>
             </div>
             <button
@@ -314,10 +315,12 @@ export default function WantedPage() {
                       {/* Posted By */}
                       <div className="flex items-center gap-2 text-sm text-gray-600">
                         {item.user.image && (
-                          <img
+                          <Image
                             src={item.user.image}
                             alt={item.user.name || "User"}
-                            className="w-6 h-6 rounded-full"
+                            width={24}
+                            height={24}
+                            className="rounded-full"
                           />
                         )}
                         <span>{item.user.name || "Anonymous"}</span>

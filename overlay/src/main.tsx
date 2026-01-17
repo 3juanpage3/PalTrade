@@ -19,7 +19,7 @@ const Main = () => {
           await overlayWs.connect(token);
 
           // Listen for trade notifications
-          overlayWs.on("trade_notification", (data) => {
+          overlayWs.on("trade_notification", (data: any) => {
             // Broadcast to overlay window
             window.postMessage(
               {
@@ -31,7 +31,7 @@ const Main = () => {
           });
 
           // Listen for offer updates
-          overlayWs.on("offer_update", (data) => {
+          overlayWs.on("offer_update", (data: any) => {
             window.postMessage(
               {
                 type: "OFFER_UPDATE",
@@ -42,7 +42,7 @@ const Main = () => {
           });
 
           // Listen for messages
-          overlayWs.on("new_message", (data) => {
+          overlayWs.on("new_message", (data: any) => {
             window.postMessage(
               {
                 type: "NEW_MESSAGE",
