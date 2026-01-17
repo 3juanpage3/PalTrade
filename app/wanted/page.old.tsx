@@ -1,11 +1,14 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Search, Plus, Trash2, ChevronDown } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Search, Plus, AlertCircle, Loader, ChevronDown } from "lucide-react";
+import Image from "next/image";
 import { palworldItems, palworldPals } from "@/data/palworld-data";
 
-interface Order {
+interface WantedItem {
   id: string;
+  userId: string;
+  user: { name: string; image?: string };
   type: "pal" | "item";
   name: string;
   description?: string;
@@ -15,10 +18,10 @@ interface Order {
   willingToPay: number;
   urgency: "low" | "medium" | "high";
   createdAt: string;
-  userName: string;
+  _count?: { responses: number };
 }
 
-interface OrderFilters {
+interface WantedSearchFilters {
   search: string;
   type: "all" | "pal" | "item";
   urgency: "all" | "low" | "medium" | "high";
@@ -26,68 +29,79 @@ interface OrderFilters {
   maxPrice: number;
 }
 
-const STORAGE_KEY = "paltrade_orders";
-
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [filters, setFilters] = useState<OrderFilters>({
+  const [wantedItems, setWantedItems] = useState<WantedItem[]>([]);
+  const [filters, setFilters] = useState<WantedSearchFilters>({
     search: "",
     type: "all",
     urgency: "all",
     minPrice: 0,
     maxPrice: 1000000,
   });
+  const [loading, setLoading] = useState(true);
   const [showPostModal, setShowPostModal] = useState(false);
-  const [isMounted, setIsMounted] = useState(false);
 
-  // Load orders from localStorage on mount
-  useEffect(() => {
-    setIsMounted(true);
+  const fetchWantedItems = useCallback(async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        setOrders(JSON.parse(stored));
-      }
-    } catch (error) {
-      console.error("Error loading orders:", error);
-    }
-  }, []);
+      setLoading(true);
+      const params = new URLSearchParams({
+        ...(filters.type !== "all" && { type: filters.type }),
+        ...(filters.urgency !== "all" && { urgency: filters.urgency }),
+        ...(filters.search && { search: filters.search }),
+        minPrice: filters.minPrice.toString(),
+        maxPrice: filters.maxPrice.toString(),
+      });
 
-  // Filter orders
-  const filteredOrders = orders.filter((order) => {
-    if (filters.type !== "all" && order.type !== filters.type) return false;
-    if (filters.urgency !== "all" && order.urgency !== filters.urgency)
-      return false;
-    if (order.willingToPay < filters.minPrice) return false;
-    if (order.willingToPay > filters.maxPrice) return false;
-    if (filters.search) {
-      const search = filters.search.toLowerCase();
-      return (
-        order.name.toLowerCase().includes(search) ||
-        (order.description?.toLowerCase().includes(search) ?? false)
-      );
+      const response = await fetch(`/api/wanted?${params}`);
+      if (!response.ok) throw new Error("Failed to fetch wanted items");
+      const data = await response.json();
+      setWantedItems(data);
+    } catch (error) {
+      console.error("Error fetching wanted items:", error);
+    } finally {
+      setLoading(false);
     }
+  }, [filters]);
+
+  useEffect(() => {
+    fetchWantedItems();
+  }, [fetchWantedItems]);
+
+  const handleSearch = (value: string) => {
+    setFilters((prev) => ({ ...prev, search: value }));
+  };
+
+  const handleFilterChange = (key: string, value: any) => {
+    setFilters((prev) => ({ ...prev, [key]: value }));
+  };
+
+  const filteredWanted = wantedItems.filter((item) => {
+    if (
+      filters.search &&
+      !item.name.toLowerCase().includes(filters.search.toLowerCase()) &&
+      !item.description?.toLowerCase().includes(filters.search.toLowerCase())
+    ) {
+      return false;
+    }
+    if (filters.type !== "all" && item.type !== filters.type) return false;
+    if (filters.urgency !== "all" && item.urgency !== filters.urgency)
+      return false;
+    if (
+      item.willingToPay < filters.minPrice ||
+      item.willingToPay > filters.maxPrice
+    )
+      return false;
     return true;
   });
 
-  const deleteOrder = (id: string) => {
-    setOrders((prev) => {
-      const updated = prev.filter((o) => o.id !== id);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      return updated;
-    });
-  };
-
   const getUrgencyColor = (urgency: string) => {
-    const colors: any = {
+    const colors = {
       high: "bg-red-100 text-red-800 border-red-300",
       medium: "bg-yellow-100 text-yellow-800 border-yellow-300",
       low: "bg-green-100 text-green-800 border-green-300",
     };
-    return colors[urgency] || colors.medium;
+    return colors[urgency as keyof typeof colors] || colors.medium;
   };
-
-  if (!isMounted) return null;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -117,7 +131,7 @@ export default function OrdersPage() {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Filters Sidebar */}
           <div className="lg:col-span-1">
-            <div className="sticky top-8 space-y-6 bg-white p-6 rounded-lg border border-gray-200">
+            <div className="sticky top-8 space-y-6">
               {/* Search */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -130,11 +144,9 @@ export default function OrdersPage() {
                   />
                   <input
                     type="text"
-                    placeholder="Search orders..."
+                    placeholder="Search wants..."
                     value={filters.search}
-                    onChange={(e) =>
-                      setFilters((prev) => ({ ...prev, search: e.target.value }))
-                    }
+                    onChange={(e) => handleSearch(e.target.value)}
                     className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -147,14 +159,12 @@ export default function OrdersPage() {
                 </label>
                 <select
                   value={filters.type}
-                  onChange={(e) =>
-                    setFilters((prev) => ({ ...prev, type: e.target.value as any }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  onChange={(e) => handleFilterChange("type", e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Types</option>
-                  <option value="pal">Pal</option>
-                  <option value="item">Item</option>
+                  <option value="pal">Pals</option>
+                  <option value="item">Items</option>
                 </select>
               </div>
 
@@ -166,17 +176,14 @@ export default function OrdersPage() {
                 <select
                   value={filters.urgency}
                   onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      urgency: e.target.value as any,
-                    }))
+                    handleFilterChange("urgency", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="all">All Urgencies</option>
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
                   <option value="high">High</option>
+                  <option value="medium">Medium</option>
+                  <option value="low">Low</option>
                 </select>
               </div>
 
@@ -185,93 +192,100 @@ export default function OrdersPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Price Range
                 </label>
-                <input
-                  type="number"
-                  placeholder="Min"
-                  value={filters.minPrice}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      minPrice: parseInt(e.target.value) || 0,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg mb-2"
-                />
-                <input
-                  type="number"
-                  placeholder="Max"
-                  value={filters.maxPrice}
-                  onChange={(e) =>
-                    setFilters((prev) => ({
-                      ...prev,
-                      maxPrice: parseInt(e.target.value) || 1000000,
-                    }))
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="number"
+                    placeholder="Min"
+                    value={filters.minPrice}
+                    onChange={(e) =>
+                      handleFilterChange(
+                        "minPrice",
+                        parseInt(e.target.value) || 0
+                      )
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Max"
+                    value={filters.maxPrice}
+                    onChange={(e) =>
+                      handleFilterChange(
+                        "maxPrice",
+                        parseInt(e.target.value) || 1000000
+                      )
+                    }
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
               </div>
 
               {/* Results Count */}
-              <div className="bg-blue-50 px-4 py-3 rounded-lg">
-                <p className="text-sm font-semibold text-blue-900">
-                  {filteredOrders.length} orders found
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <p className="text-sm text-blue-800">
+                  <strong>{filteredWanted.length}</strong> wants found
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Orders Grid */}
+          {/* Main Content */}
           <div className="lg:col-span-3">
-            {filteredOrders.length === 0 ? (
-              <div className="text-center py-16">
-                <div className="text-6xl mb-4">📋</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  No orders found
-                </h3>
-                <p className="text-gray-600">
-                  {orders.length === 0
-                    ? "Be the first to post an order!"
-                    : "Try adjusting your filters"}
+            {loading ? (
+              <div className="flex items-center justify-center py-16">
+                <Loader className="animate-spin text-blue-600" size={32} />
+              </div>
+            ) : filteredWanted.length === 0 ? (
+              <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
+                <AlertCircle size={48} className="mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600 text-lg">No wanted items found</p>
+                <p className="text-gray-500 mt-2">
+                  Try adjusting your filters or be the first to post a want!
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredOrders.map((order) => (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredWanted.map((item) => (
                   <div
-                    key={order.id}
+                    key={item.id}
                     className="bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition"
                   >
-                    <div className="p-4 space-y-3">
-                      {/* Type Badge */}
-                      <div className="flex items-start justify-between">
-                        <span className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs font-semibold rounded">
-                          {order.type === "pal" ? "🐾 Pal" : "📦 Item"}
-                        </span>
-                        <button
-                          onClick={() => deleteOrder(order.id)}
-                          className="text-gray-400 hover:text-red-600 transition"
+                    {/* Header */}
+                    <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4">
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <h3 className="font-bold text-lg text-gray-900">
+                            {item.name}
+                          </h3>
+                          <span className="inline-block px-2 py-1 text-xs font-semibold rounded-full bg-gray-700 text-white mt-1">
+                            {item.type.toUpperCase()}
+                          </span>
+                        </div>
+                        <span
+                          className={`px-3 py-1 text-xs font-semibold rounded-full border ${getUrgencyColor(
+                            item.urgency
+                          )}`}
                         >
-                          <Trash2 size={18} />
-                        </button>
+                          {item.urgency.toUpperCase()}
+                        </span>
                       </div>
+                    </div>
 
-                      {/* Name */}
-                      <h3 className="text-lg font-bold text-gray-900">
-                        {order.name}
-                      </h3>
-
-                      {/* Description */}
-                      {order.description && (
-                        <p className="text-sm text-gray-600">{order.description}</p>
+                    {/* Content */}
+                    <div className="p-4 space-y-3">
+                      {item.description && (
+                        <p className="text-sm text-gray-600">
+                          {item.description}
+                        </p>
                       )}
 
                       {/* Traits */}
-                      {order.traits.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {order.traits.map((trait) => (
+                      {item.traits && item.traits.length > 0 && (
+                        <div className="flex flex-wrap gap-2">
+                          {item.traits.map((trait) => (
                             <span
                               key={trait}
-                              className="inline-block px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded"
+                              className="px-2 py-1 text-xs bg-purple-100 text-purple-800 rounded-full"
                             >
                               {trait}
                             </span>
@@ -280,39 +294,41 @@ export default function OrdersPage() {
                       )}
 
                       {/* Level Range */}
-                      {order.levelMin !== undefined && order.levelMax !== undefined && (
-                        <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2">
+                      {item.levelMin && item.levelMax && (
+                        <div className="flex items-center justify-between text-sm">
                           <span className="text-gray-600">Level Range:</span>
                           <span className="font-semibold text-gray-900">
-                            {order.levelMin} - {order.levelMax}
+                            {item.levelMin} - {item.levelMax}
                           </span>
                         </div>
                       )}
 
                       {/* Price */}
-                      <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-2">
+                      <div className="flex items-center justify-between text-sm border-t border-gray-200 pt-3">
                         <span className="text-gray-600">Willing to Pay:</span>
                         <span className="font-bold text-blue-600">
-                          ${order.willingToPay.toLocaleString()}
+                          ${item.willingToPay.toLocaleString()}
                         </span>
                       </div>
 
                       {/* Posted By */}
-                      <div className="flex items-center justify-between text-xs text-gray-600 border-t border-gray-200 pt-2">
-                        <span>By: {order.userName}</span>
-                        <span>{new Date(order.createdAt).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-2 text-sm text-gray-600">
+                        {item.user.image && (
+                          <Image
+                            src={item.user.image}
+                            alt={item.user.name || "User"}
+                            width={24}
+                            height={24}
+                            className="rounded-full"
+                          />
+                        )}
+                        <span>{item.user.name || "Anonymous"}</span>
                       </div>
 
-                      {/* Urgency Badge */}
-                      <div className="pt-2">
-                        <span
-                          className={`inline-block px-3 py-1 rounded-full text-xs font-semibold border ${getUrgencyColor(
-                            order.urgency
-                          )}`}
-                        >
-                          {order.urgency.charAt(0).toUpperCase() +
-                            order.urgency.slice(1)}{" "}
-                          Urgency
+                      {/* Responses */}
+                      <div className="bg-gray-50 px-3 py-2 rounded text-sm text-center">
+                        <span className="font-semibold text-gray-700">
+                          {item._count?.responses || 0} responses
                         </span>
                       </div>
 
@@ -331,12 +347,11 @@ export default function OrdersPage() {
 
       {/* Post Modal */}
       {showPostModal && (
-        <PostOrderModal
+        <PostWantedModal
           onClose={() => setShowPostModal(false)}
-          onSuccess={(newOrder) => {
-            setOrders((prev) => [newOrder, ...prev]);
-            const updated = [newOrder, ...orders];
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+          onSuccess={() => {
+            fetchWantedItems();
+            setShowPostModal(false);
           }}
         />
       )}
@@ -344,12 +359,12 @@ export default function OrdersPage() {
   );
 }
 
-function PostOrderModal({
+function PostWantedModal({
   onClose,
   onSuccess,
 }: {
   onClose: () => void;
-  onSuccess: (order: Order) => void;
+  onSuccess: () => void;
 }) {
   const [formData, setFormData] = useState({
     type: "pal",
@@ -366,53 +381,54 @@ function PostOrderModal({
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  const getOptions = () => {
+  const getOptions = useCallback(() => {
     if (formData.type === "pal") {
       return palworldPals.map((pal) => pal.name);
     } else {
       return palworldItems.map((item) => item.name);
     }
-  };
+  }, [formData.type]);
 
   const filteredOptions = getOptions().filter((option) =>
     option.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-
-    // Validation
-    if (!formData.name) {
-      setError("Please select a name");
-      return;
-    }
-    if (!formData.willingToPay || parseFloat(formData.willingToPay) <= 0) {
-      setError("Please enter a valid price");
-      return;
-    }
-
     setLoading(true);
 
     try {
-      const newOrder: Order = {
-        id: Date.now().toString(),
-        type: formData.type as "pal" | "item",
-        name: formData.name,
-        description: formData.description,
+      const payload = {
+        ...formData,
         traits: formData.traits.split(",").filter((t) => t.trim()),
         levelMin: formData.levelMin ? parseInt(formData.levelMin) : undefined,
         levelMax: formData.levelMax ? parseInt(formData.levelMax) : undefined,
         willingToPay: parseFloat(formData.willingToPay),
-        urgency: formData.urgency as "low" | "medium" | "high",
-        createdAt: new Date().toISOString(),
-        userName: "You",
       };
 
-      onSuccess(newOrder);
-      onClose();
+      console.log("Submitting order:", payload);
+
+      const response = await fetch("/api/wanted", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const responseData = await response.json();
+      console.log("Response:", responseData);
+
+      if (!response.ok) {
+        throw new Error(
+          responseData.details ||
+            responseData.error ||
+            "Failed to post wanted item"
+        );
+      }
+
+      onSuccess();
     } catch (err) {
-      setError("Failed to create order");
+      setError(err instanceof Error ? err.message : "An error occurred");
     } finally {
       setLoading(false);
     }
@@ -438,7 +454,6 @@ function PostOrderModal({
             </div>
           )}
 
-          {/* Type */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Type
@@ -461,7 +476,6 @@ function PostOrderModal({
             </select>
           </div>
 
-          {/* Name with Dropdown */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               {formData.type === "pal" ? "Pal Name" : "Item Name"} *
@@ -472,7 +486,9 @@ function PostOrderModal({
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <span className={formData.name ? "text-gray-900" : "text-gray-500"}>
+                <span
+                  className={formData.name ? "text-gray-900" : "text-gray-500"}
+                >
                   {formData.name || "Select a name..."}
                 </span>
                 <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -497,7 +513,10 @@ function PostOrderModal({
                           <button
                             type="button"
                             onClick={() => {
-                              setFormData((prev) => ({ ...prev, name: option }));
+                              setFormData((prev) => ({
+                                ...prev,
+                                name: option,
+                              }));
                               setShowDropdown(false);
                               setSearchQuery("");
                             }}
@@ -518,7 +537,6 @@ function PostOrderModal({
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Description
@@ -536,7 +554,6 @@ function PostOrderModal({
             />
           </div>
 
-          {/* Pal-specific fields */}
           {formData.type === "pal" && (
             <>
               <div>
@@ -591,7 +608,6 @@ function PostOrderModal({
             </>
           )}
 
-          {/* Price */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Willing to Pay *
@@ -610,7 +626,6 @@ function PostOrderModal({
             />
           </div>
 
-          {/* Urgency */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Urgency
@@ -628,7 +643,6 @@ function PostOrderModal({
             </select>
           </div>
 
-          {/* Buttons */}
           <div className="flex gap-3 pt-4 border-t border-gray-200">
             <button
               type="button"
