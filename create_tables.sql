@@ -102,3 +102,43 @@ CREATE INDEX IF NOT EXISTS "Listing_userId_idx" ON "Listing"("userId");
 CREATE INDEX IF NOT EXISTS "Offer_listingId_idx" ON "Offer"("listingId");
 CREATE INDEX IF NOT EXISTS "Offer_bidderId_idx" ON "Offer"("bidderId");
 CREATE INDEX IF NOT EXISTS "Notification_userId_idx" ON "Notification"("userId");
+
+-- Create WantedItem table for Orders/Wanted Items feature
+CREATE TABLE IF NOT EXISTS "WantedItem" (
+  id TEXT PRIMARY KEY,
+  "userId" TEXT NOT NULL,
+  type TEXT NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  traits TEXT[],
+  "levelMin" INTEGER,
+  "levelMax" INTEGER,
+  "willingToPay" DOUBLE PRECISION NOT NULL,
+  urgency TEXT DEFAULT 'medium',
+  "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3),
+  FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE
+);
+
+-- Create WantedItemResponse table for responses to wanted items
+CREATE TABLE IF NOT EXISTS "WantedItemResponse" (
+  id TEXT PRIMARY KEY,
+  "wantedItemId" TEXT NOT NULL,
+  "respondentId" TEXT NOT NULL,
+  message TEXT NOT NULL,
+  "offerPrice" DOUBLE PRECISION,
+  status TEXT DEFAULT 'pending',
+  "createdAt" TIMESTAMP(3) DEFAULT CURRENT_TIMESTAMP,
+  "updatedAt" TIMESTAMP(3),
+  FOREIGN KEY ("wantedItemId") REFERENCES "WantedItem"(id) ON DELETE CASCADE,
+  FOREIGN KEY ("respondentId") REFERENCES "User"(id) ON DELETE CASCADE
+);
+
+-- Create indexes for WantedItem
+CREATE INDEX IF NOT EXISTS "WantedItem_userId_idx" ON "WantedItem"("userId");
+CREATE INDEX IF NOT EXISTS "WantedItem_type_idx" ON "WantedItem"(type);
+CREATE INDEX IF NOT EXISTS "WantedItem_urgency_idx" ON "WantedItem"(urgency);
+
+-- Create indexes for WantedItemResponse
+CREATE INDEX IF NOT EXISTS "WantedItemResponse_wantedItemId_idx" ON "WantedItemResponse"("wantedItemId");
+CREATE INDEX IF NOT EXISTS "WantedItemResponse_respondentId_idx" ON "WantedItemResponse"("respondentId");

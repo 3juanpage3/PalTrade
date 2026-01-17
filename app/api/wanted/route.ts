@@ -113,8 +113,9 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    console.error("Failed to create wanted item:", error);
     return NextResponse.json(
-      { error: "Failed to create wanted item" },
+      { error: "Failed to create wanted item", details: error.message },
       { status: 500 }
     );
   }

@@ -74,7 +74,7 @@ export default function Header() {
               href="/wanted"
               className="text-gray-700 hover:text-primary-600 transition-colors"
             >
-              Wanted
+              Orders
             </Link>
             {session && (
               <Link

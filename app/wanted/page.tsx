@@ -29,7 +29,7 @@ interface WantedSearchFilters {
   maxPrice: number;
 }
 
-export default function WantedPage() {
+export default function OrdersPage() {
   const [wantedItems, setWantedItems] = useState<WantedItem[]>([]);
   const [filters, setFilters] = useState<WantedSearchFilters>({
     search: "",
@@ -110,9 +110,7 @@ export default function WantedPage() {
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Wanted Items & Pals
-              </h1>
+              <h1 className="text-3xl font-bold text-gray-900">Orders</h1>
               <p className="text-gray-600 mt-2">
                 Help traders find what they need - post notices for items and
                 pals you&apos;re looking for
@@ -401,20 +399,31 @@ function PostWantedModal({
     setLoading(true);
 
     try {
+      const payload = {
+        ...formData,
+        traits: formData.traits.split(",").filter((t) => t.trim()),
+        levelMin: formData.levelMin ? parseInt(formData.levelMin) : undefined,
+        levelMax: formData.levelMax ? parseInt(formData.levelMax) : undefined,
+        willingToPay: parseFloat(formData.willingToPay),
+      };
+
+      console.log("Submitting order:", payload);
+
       const response = await fetch("/api/wanted", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          ...formData,
-          traits: formData.traits.split(",").filter((t) => t.trim()),
-          levelMin: formData.levelMin ? parseInt(formData.levelMin) : undefined,
-          levelMax: formData.levelMax ? parseInt(formData.levelMax) : undefined,
-          willingToPay: parseFloat(formData.willingToPay),
-        }),
+        body: JSON.stringify(payload),
       });
 
+      const responseData = await response.json();
+      console.log("Response:", responseData);
+
       if (!response.ok) {
-        throw new Error("Failed to post wanted item");
+        throw new Error(
+          responseData.details ||
+            responseData.error ||
+            "Failed to post wanted item"
+        );
       }
 
       onSuccess();
@@ -452,7 +461,11 @@ function PostWantedModal({
             <select
               value={formData.type}
               onChange={(e) => {
-                setFormData((prev) => ({ ...prev, type: e.target.value, name: "" }));
+                setFormData((prev) => ({
+                  ...prev,
+                  type: e.target.value,
+                  name: "",
+                }));
                 setSearchQuery("");
               }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -473,7 +486,9 @@ function PostWantedModal({
                 onClick={() => setShowDropdown(!showDropdown)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
-                <span className={formData.name ? "text-gray-900" : "text-gray-500"}>
+                <span
+                  className={formData.name ? "text-gray-900" : "text-gray-500"}
+                >
                   {formData.name || "Select a name..."}
                 </span>
                 <ChevronDown className="h-4 w-4 text-gray-400" />
@@ -498,7 +513,10 @@ function PostWantedModal({
                           <button
                             type="button"
                             onClick={() => {
-                              setFormData((prev) => ({ ...prev, name: option }));
+                              setFormData((prev) => ({
+                                ...prev,
+                                name: option,
+                              }));
                               setShowDropdown(false);
                               setSearchQuery("");
                             }}
