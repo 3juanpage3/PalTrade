@@ -71,13 +71,15 @@ export async function GET(request: Request) {
     );
   } catch (error: any) {
     console.error("GET /api/wanted error:", error);
-    
+
     // Check if it's a table not found error
     if (error?.code === "P1102" || error?.message?.includes("does not exist")) {
-      console.log("WantedItem table does not exist yet - returning empty array");
+      console.log(
+        "WantedItem table does not exist yet - returning empty array"
+      );
       return NextResponse.json([]);
     }
-    
+
     return NextResponse.json(
       { error: "Failed to fetch wanted items", details: error?.message },
       { status: 500 }
@@ -137,7 +139,10 @@ export async function POST(request: Request) {
     // Check if it's a table not found error
     if (error?.code === "P1102" || error?.message?.includes("does not exist")) {
       return NextResponse.json(
-        { error: "Database tables not yet created. Please run the SQL migration in Supabase first." },
+        {
+          error:
+            "Database tables not yet created. Please run the SQL migration in Supabase first.",
+        },
         { status: 503 }
       );
     }
