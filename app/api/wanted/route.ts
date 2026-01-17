@@ -69,9 +69,17 @@ export async function GET(request: Request) {
         _count: undefined,
       }))
     );
-  } catch (error) {
+  } catch (error: any) {
+    console.error("GET /api/wanted error:", error);
+    
+    // Check if it's a table not found error
+    if (error?.code === "P1102" || error?.message?.includes("does not exist")) {
+      console.log("WantedItem table does not exist yet - returning empty array");
+      return NextResponse.json([]);
+    }
+    
     return NextResponse.json(
-      { error: "Failed to fetch wanted items" },
+      { error: "Failed to fetch wanted items", details: error?.message },
       { status: 500 }
     );
   }
@@ -82,15 +90,18 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     console.log("Session check:", session);
-    
+
     if (!session?.user?.id) {
       console.error("No session or user ID found");
-      return NextResponse.json({ error: "Unauthorized - Please login first" }, { status: 401 });
+      return NextResponse.json(
+        { error: "Unauthorized - Please login first" },
+        { status: 401 }
+      );
     }
 
     const body = await request.json();
     console.log("Request body:", body);
-    
+
     const data = wantedSchema.parse(body);
     console.log("Validated data:", data);
 
@@ -115,14 +126,22 @@ export async function POST(request: Request) {
     return NextResponse.json(wantedItem, { status: 201 });
   } catch (error: any) {
     console.error("Full error in POST:", error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: "Invalid request data", details: error.errors },
         { status: 400 }
       );
     }
-    
+
+    // Check if it's a table not found error
+    if (error?.code === "P1102" || error?.message?.includes("does not exist")) {
+      return NextResponse.json(
+        { error: "Database tables not yet created. Please run the SQL migration in Supabase first." },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to create wanted item", details: error.message },
       { status: 500 }
