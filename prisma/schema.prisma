@@ -51,6 +51,8 @@ model User {
   listings      Listing[]
   offers        Offer[]
   notifications Notification[]
+  wantedItems   WantedItem[]
+  wantedResponses WantedItemResponse[] @relation("WantedItemResponses")
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -114,5 +116,42 @@ model Notification {
   createdAt DateTime @default(now())
 
   @@index([userId])
+}
+
+model WantedItem {
+  id            String   @id @default(cuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type          String   // "pal" or "item"
+  name          String
+  description   String?
+  traits        String[] @default([]) // Array of traits for pals
+  levelMin      Int?
+  levelMax      Int?
+  willingToPay  Float
+  urgency       String   @default("medium") // "low", "medium", "high"
+  responses     WantedItemResponse[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([urgency])
+}
+
+model WantedItemResponse {
+  id           String   @id @default(cuid())
+  wantedItemId String
+  wantedItem   WantedItem @relation(fields: [wantedItemId], references: [id], onDelete: Cascade)
+  respondentId String
+  respondent   User     @relation("WantedItemResponses", fields: [respondentId], references: [id], onDelete: Cascade)
+  message      String
+  offerPrice   Float?
+  status       String   @default("pending") // "pending", "accepted", "rejected", "completed"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([wantedItemId])
+  @@index([respondentId])
 }
 

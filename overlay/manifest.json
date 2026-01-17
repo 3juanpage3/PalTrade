@@ -1,0 +1,70 @@
+{
+  "manifest_version": "2",
+  "type": "simple",
+  "meta": {
+    "name": "PalTrade Overlay",
+    "author": "Your Name",
+    "version": "0.1.0",
+    "icon": "images/icon.png",
+    "icon_gray": "images/icon-gray.png"
+  },
+  "permissions": [
+    "gamesOverlay",
+    "hotkeys",
+    "gameInfo",
+    "logging",
+    "extensions"
+  ],
+  "channel": "live",
+  "launch_events": [
+    {
+      "event": "GameLaunch",
+      "tracked_events": ["start"],
+      "identifier": "1394410"
+    }
+  ],
+  "events": [
+    {
+      "identifier": "TradeNotification",
+      "filtering": {
+        "origin": "Anywhere"
+      }
+    }
+  ],
+  "windows": {
+    "main": {
+      "file": "dist/main.html",
+      "transparent": true,
+      "grab_keyboard_focus": false,
+      "is_background_page": true
+    },
+    "overlay": {
+      "file": "dist/overlay.html",
+      "transparent": true,
+      "grab_keyboard_focus": false,
+      "overlay": true,
+      "size": {
+        "width": 450,
+        "height": 700
+      },
+      "start_position": {
+        "top": 100,
+        "left": 50
+      }
+    },
+    "notifications": {
+      "file": "dist/notifications.html",
+      "transparent": true,
+      "grab_keyboard_focus": false,
+      "overlay": true,
+      "size": {
+        "width": 350,
+        "height": 120
+      },
+      "start_position": {
+        "top": 20,
+        "right": 20
+      }
+    }
+  }
+}
