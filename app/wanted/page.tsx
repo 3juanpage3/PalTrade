@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Plus, AlertCircle, Loader } from "lucide-react";
+import { Search, Plus, AlertCircle, Loader, ChevronDown } from "lucide-react";
 import Image from "next/image";
+import { palworldItems, palworldPals } from "@/data/palworld-data";
 
 interface WantedItem {
   id: string;
@@ -379,6 +380,20 @@ function PostWantedModal({
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const getOptions = useCallback(() => {
+    if (formData.type === "pal") {
+      return palworldPals.map((pal) => pal.name);
+    } else {
+      return palworldItems.map((item) => item.name);
+    }
+  }, [formData.type]);
+
+  const filteredOptions = getOptions().filter((option) =>
+    option.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -436,9 +451,10 @@ function PostWantedModal({
             </label>
             <select
               value={formData.type}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, type: e.target.value }))
-              }
+              onChange={(e) => {
+                setFormData((prev) => ({ ...prev, type: e.target.value, name: "" }));
+                setSearchQuery("");
+              }}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               required
             >
@@ -449,17 +465,58 @@ function PostWantedModal({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Name *
+              {formData.type === "pal" ? "Pal Name" : "Item Name"} *
             </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
-              }
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              required
-            />
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowDropdown(!showDropdown)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-left flex items-center justify-between hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <span className={formData.name ? "text-gray-900" : "text-gray-500"}>
+                  {formData.name || "Select a name..."}
+                </span>
+                <ChevronDown className="h-4 w-4 text-gray-400" />
+              </button>
+
+              {showDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 border border-gray-300 rounded-lg bg-white shadow-lg z-50">
+                  <div className="p-2 border-b border-gray-200">
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      autoFocus
+                    />
+                  </div>
+                  <ul className="max-h-48 overflow-y-auto">
+                    {filteredOptions.length > 0 ? (
+                      filteredOptions.map((option) => (
+                        <li key={option}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setFormData((prev) => ({ ...prev, name: option }));
+                              setShowDropdown(false);
+                              setSearchQuery("");
+                            }}
+                            className="w-full text-left px-3 py-2 hover:bg-blue-50 text-sm text-gray-700 transition"
+                          >
+                            {option}
+                          </button>
+                        </li>
+                      ))
+                    ) : (
+                      <li className="px-3 py-2 text-sm text-gray-500">
+                        No results found
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              )}
+            </div>
           </div>
 
           <div>
